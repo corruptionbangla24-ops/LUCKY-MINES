@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LUCKY MINES - ROYAL CASINO</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 🎰 ক্যাসিনো হেডার প্যানেল -->
+    <div class="header">
+        <div class="brand">
+            <div class="name">LUCKY MINES</div>
+            <div class="game">DIAMOND HUNT</div>
+        </div>
+        <div class="header-right">
+            <button class="sound-btn" id="mute-btn" onclick="toggleMute()">🔊</button>
+            <div class="balance-box">৳ <span id="user-balance">0.00</span></div>
+        </div>
+    </div>
+
+    <!-- 📊 লাইভ মাল্টিপ্লায়ার প্রফিট বার ভাই ভাই -->
+    <div class="multiplier-bar">
+        <div class="m-factor active" id="next-m-display">NEXT: x1.15</div>
+    </div>
+
+    <!-- 💣 ২৫টি গোপন বক্স গ্রিড এরিয়া (ছবি ছাড়া পিউর থ্রিডি কোডিং ভাই ভাই) -->
+    <div class="mines-grid" id="main-grid">
+        <!-- জাভাস্ক্রিপ্ট দিয়ে ২৫টি রাজকীয় বক্স তৈরি হবে ভাই ভাই -->
+    </div>
+
+    <!-- 🏆 ইন-লাইন স্কোরিং ও ক্যাশআউট মেসেজ বার -->
+    <div class="win-status-container" id="win-status-box">
+        <span id="win-text-msg">বাজি ধরে BET বোতাম চাপুন ভাই!</span>
+    </div>
+
+    <!-- 🎛️ কন্ট্রোল প্যানেল এরিয়া -->
+    <div class="footer-controls">
+        <div class="play-section">
+            <div class="bet-selector">
+                <button class="bet-btn-nav" onclick="adjustBet('minus')">−</button>
+                <div style="text-align: center; width: 60px;">
+                    <div style="font-size: 9px; color: #aaa; font-weight: bold;">BET</div>
+                    <div style="font-size: 15px; font-weight: 900; color: #fff;" id="bet-display">৳৫০</div>
+                </div>
+                <button class="bet-btn-nav" onclick="adjustBet('plus')">+</button>
+            </div>
+
+            <!-- 🚀 গেমের স্টেট অনুযায়ী বাটন নিজে থেকে ক্যাশআউট বাটনে রূপান্তর হবে ভাই ভাই! -->
+            <button class="play-btn" id="action-btn" onclick="handleMainAction()">BET</button>
+
+            <!-- 💣 বোমার সংখ্যা সিলেক্টর (১ থেকে ২৪টি বোমা চুজ করার চাবি ভাই) -->
+            <div class="mines-selector">
+                <span style="font-size: 10px; color: #aaa; font-weight: bold;">MINES</span>
+                <select id="mines-count" onchange="playAudio('click')">
+                    <option value="1">১</option>
+                    <option value="3" selected>৩</option>
+                    <option value="5">৫</option>
+                    <option value="10">১০</option>
+                    <option value="15">১৫</option>
+                    <option value="20">২০</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlUserId = urlParams.get('userId') || urlParams.get('id') || urlParams.get('username') || "guest_user";
+        const urlWallet = urlParams.get('wallet') || "main";
+        
+        const SERVER_URL = window.location.origin;
+
+        let balance = 0.00;
+        let currentBet = 50;
+        let gameActive = false;
+        let isMuted = false;
+        let currentMultiplier = 1.00;
+        let nextMultiplier = 1.15;
+        let revealedCount = 0;
+
+        if (typeof io !== 'undefined') {
+            const socket = io();
+            socket.on("balanceUpdate", (data) => {
+                if (data && data.username === urlUserId) {
+                    if (window.parent) window.parent.postMessage({ action: "refresh_wallet" }, "*");
+                    fetchLiveBalance();
+                }
+            });
+        }
+
+        async function fetchLiveBalance() {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/mines-balance?userId=${urlUserId}&wallet=${urlWallet}`);
+                const data = await response.json();
+                if (data && data.success) {
+                    balance = parseFloat(data.balance);
+                    document.getElementById("user-balance").innerText = balance.toFixed(2);
+                }
+            } catch (e) { console.error("Balance lag"); }
+        }
+
+        // ২৫টি রাজকীয় থ্রিডি কার্ড গ্রিড জেনারেটর ভাই ভাই
+        function createGrid() {
+            const grid = document.getElementById("main-grid");
+            grid.innerHTML = "";
+            for (let i = 0; i < 25; i++) {
+                const box = document.createElement("div");
+                box.className = "mine-box locked-box";
+                box.dataset.index = i;
+                box.onclick = () => handleBoxClick(box);
+                grid.appendChild(box);
+            }
+        }
+
+        window.onload = () => {
+            if (window.parent) window.parent.postMessage({ action: "refresh_wallet" }, "*");
+            fetchLiveBalance();
+            createGrid();
+        };
+
+        function adjustBet(action) {
+            if (gameActive) return;
+            if (action === 'minus' && currentBet > 1) {
+                if (currentBet <= 10) currentBet -= 1;
+                else if (currentBet <= 100) currentBet -= 10;
+                else currentBet -= 50;
+            }
+            if (action === 'plus' && currentBet < 2000) {
+                if (currentBet < 10) currentBet += 1;
+                else if (currentBet < 100) currentBet += 10;
+                else currentBet += 50;
+            }
+            if (currentBet < 1) currentBet = 1;
+            if (currentBet > 2000) currentBet = 2000;
+            
+            document.getElementById("bet-display").innerText = `৳${currentBet}`;
+            playAudio('click');
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            document.getElementById("mute-btn").innerText = isMuted ? "🔇" : "🔊";
+            document.getElementById("mute-btn").classList.toggle("muted-active", isMuted);
+        }
+
+        async function handleMainAction() {
+            const actionBtn = document.getElementById("action-btn");
+            
+            if (!gameActive) {
+                // 🚀 গেম স্টার্ট লকিং গেটওয়ে ভাই ভাই
+                playAudio('click');
+                const minesCount = document.getElementById("mines-count").value;
+                actionBtn.disabled = true;
+
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/mines-start`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: urlUserId,
+                            amount: parseFloat(currentBet),
+                            wallet: urlWallet,
+                            minesCount: parseInt(minesCount)
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data && data.success === true) {
+                        balance = parseFloat(data.balance);
+                        document.getElementById("user-balance").innerText = balance.toFixed(2);
+                        if (window.parent) window.parent.postMessage({ action: "refresh_wallet" }, "*");
+
+                        gameActive = true;
+                        revealedCount = 0;
+                        currentMultiplier = 1.00;
+                        nextMultiplier = data.nextMultiplier;
+                        
+                        document.getElementById("next-m-display").innerText = `NEXT: x${nextMultiplier.toFixed(2)}`;
+                        document.getElementById("mines-count").disabled = true;
+                        
+                        actionBtn.disabled = false;
+                        actionBtn.innerText = "CASH OUT (৳0)";
+                        actionBtn.className = "play-btn cashout-active-btn";
+                        
+                        createGrid();
+                        document.getElementById("win-status-box").className = "win-status-container";
+                        document.getElementById("win-text-msg").innerText = "💎 সাবধানে হীরা খুঁজুন ভাই! বোমা ফুটলেই লস।";
+                    } else {
+                        alert(data.message || "❌ Insufficient Balance!");
+                        actionBtn.disabled = false;
+                    }
+                } catch (err) {
+                    alert("⚠️ কানেকশন লেগ! আবার চেষ্টা করুন।");
+                    actionBtn.disabled = false;
+                }
+            } else {
+                // 💰 ক্যাশআউট বাটন ট্রিগার মেকানিজম ভাই ভাই
+                actionBtn.disabled = true;
+                try {
+                    const response = await fetch(`${SERVER_URL}/api/mines-cashout`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: urlUserId, wallet: urlWallet })
+                    });
+                    const data = await response.json();
+                    if (data && data.success) {
+                        balance = parseFloat(data.balance);
+                        document.getElementById("user-balance").innerText = balance.toFixed(2);
+                        if (window.parent) window.parent.postMessage({ action: "refresh_wallet" }, "*");
+                        
+                        playAudio('win'); // win3.mp3 ফায়ার লক ভাই ভাই
+                        
+                        document.getElementById("win-status-box").className = "win-status-container win-glow-bar";
+                        document.getElementById("win-text-msg").innerText = `🏆 মেগা ক্যাশআউট সফল!! আপনি জিতেছেন: ৳${data.winAmount}`;
+                        revealAll(data.bombs, true);
+                        resetGameUi();
+                    }
+                } catch(e) { actionBtn.disabled = false; }
+            }
+        }
+
+        
+        // 🎯 [২৫-ঘর ডায়নামিক বক্স ক্লিক ও মেগা মাইনস ট্র্যাকিং ইঞ্জিন ভাই ভাই]
+        async function handleBoxClick(index) {
+            if (!isGameActive || isSpinning || revealedBoxes.has(index)) return;
+
+            revealedBoxes.add(index);
+            const box = document.getElementById(`box-${index}`);
+            box.classList.add("revealed");
+
+            playAudio('click'); // 🚀 প্রতিটি ঘর উল্টানোর সময় click3.mp3 ফায়ার হবে ভাই ভাই!
+
+            try {
+                const response = await fetch(`${SERVER_URL}/api/mines-reveal`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: urlUserId,
+                        index: index
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data && data.success === true) {
+                    if (data.status === "win") {
+                        // 💎 হীরা বেরিয়েছে ভাই! ঘরটি রাজকীয় হীরাতে লকড হবে ভাই ভাই
+                        box.innerHTML = `<div class="diamond-icon">💎</div>`;
+                        box.classList.add("diamond-glow");
+                        
+                        // পরবর্তী গুণের রেট ও তাজা টাকা স্ক্রিনে লাইভ আপডেট ভাই
+                        currentMultiplier = data.nextMultiplier;
+                        document.getElementById("win-text-msg").innerText = `💎 হীরা মিলেছে! রানিং গুণিতক: x${currentMultiplier.toFixed(2)}`;
+                        document.getElementById("cashout-btn").innerText = `CASHOUT (৳${data.currentWinCash})`;
+                        document.getElementById("cashout-btn").disabled = false;
+                        
+                        playAudio('click'); // সাধারণ উইন সাউন্ড বুস্ট ভাই
+
+                    } else if (data.status === "blast") {
+                        // 💥 বোমায় টাচ লেগে গেছে ভাই! মেগা ক্রাশ লুপ একটিভ ভাই ভাই!
+                        isGameActive = false;
+                        box.innerHTML = `<div class="mine-icon">💣</div>`;
+                        box.classList.add("mine-blast-glow");
+                        
+                        // 🎵 বোমা ব্লাস্ট হওয়ার সাথে সাথে spin3.mp3 (ক্রাশ সাউন্ড) ফায়ার লক ভাই ভাই
+                        playAudio('spin');
+
+                        document.getElementById("win-status-box").className = "win-status-container lose-glow-bar";
+                        document.getElementById("win-text-msg").innerText = "💥 ধামাকা ক্রাশ! বোমায় টাচ লেগে বাজি লস হয়েছে ভাই!";
+                        
+                        // বাকি সব গোপন বোমার ঘরগুলো প্লেয়ারকে ওপেন করে দেখানো হচ্ছে ভাই ভাই
+                        revealAllMines(data.allMines);
+                        resetGameLayout();
+                    }
+                }
+            } catch (err) {
+                console.error("Mines click engine error");
+            }
+        }
+
+        // 🛫 নগদ টাকা পকেটে তোলার ওরিজিনাল ক্যাশআউট গেটওয়ে লকিং ভাই ভাই
+        async function handleCashout() {
+            if (!isGameActive || revealedBoxes.size === 0) return;
+
+            isGameActive = false;
+            document.getElementById("cashout-btn").disabled = true;
+
+            try {
+                const response = await fetch(`${SERVER_URL}/api/mines-cashout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: urlUserId,
+                        wallet: urlWallet
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data && data.success === true) {
+                    balance = parseFloat(data.balance);
+                    document.getElementById("user-balance").innerText = balance.toFixed(2);
+                    
+                    if (window.parent) window.parent.postMessage({ action: "refresh_wallet" }, "*");
+                    if (window.top) window.top.postMessage({ action: "refresh_wallet" }, "*");
+
+                    // 🎵 ক্যাশআউট সফল হলে win3.mp3 রাজকীয় জয়ের সাউন্ড ফায়ার লক ভাই!
+                    playAudio('win');
+
+                    document.getElementById("win-status-box").className = "win-status-container win-glow-bar";
+                    document.getElementById("win-text-msg").innerText = `🏆 মেগা ক্যাশআউট সফল!! আপনি জিতেছেন: ৳${data.winAmount}`;
+                    
+                    revealAllMines(data.allMines);
+                    resetGameLayout();
+                }
+            } catch (err) {
+                console.error("Cashout engine network error");
+            }
+        }
+
+        function revealAllMines(minesArray) {
+            if (!minesArray) return;
+            minesArray.forEach(index => {
+                const box = document.getElementById(`box-${index}`);
+                if (box && !revealedBoxes.has(index)) {
+                    box.innerHTML = `<div class="mine-icon" style="opacity: 0.5;">💣</div>`;
+                    box.style.background = "#2c252d";
+                }
+            });
+        }
+
+        function resetGameLayout() {
+            isGameActive = false;
+            document.getElementById("spin-btn").disabled = false;
+            document.getElementById("cashout-btn").disabled = true;
+            document.getElementById("mines-count").disabled = false;
+            
+            // প্লাস-মাইনাস বাটন বাজি ধরার জন্য আবার অন করে দেওয়া হলো ভাই ভাই
+            document.querySelectorAll(".bet-btn-nav").forEach(b => b.disabled = false);
+        }
+
+        // 🎯 [আপনার রিকোয়ারমেন্ট অনুযায়ী ৩টি প্রিমিয়াম সাউন্ড ও বাফার গেটওয়ে লক ভাই ভাই]
+        const slotSounds = {
+            click: new Audio('click3.mp3'),   // 🚀 click3.mp3
+            spin: new Audio('spin3.mp3'),     // 🚀 spin3.mp3 (ব্লাস্ট ক্রাশ সাউন্ড)
+            win: new Audio('win3.mp3')        // 🚀 win3.mp3 (ক্যাশআউট সাউন্ড)
+        };
+        Object.values(slotSounds).forEach(s => s.load());
+
+        function playAudio(type) { 
+            if (isMuted) return; // 🔇 সাউন্ড অফ থাকলে কোনো অডিও প্লে হবে না ভাই ভাই!
+            try { 
+                slotSounds[type].currentTime = 0; 
+                slotSounds[type].play(); 
+            } catch(e){ console.log("Audio play blocked waiting for spin click"); } 
+        }
+    </script>
+</body>
+</html>
