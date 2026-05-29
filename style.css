@@ -1,0 +1,304 @@
+/* 🎰 GLOBAL LUCKY MINES CASINO MASTER RESPONSIVE CSS */
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    user-select: none; 
+    -webkit-user-select: none; 
+}
+
+body { 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    background: #060913; 
+    color: white; 
+    margin: 0; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: space-between; 
+    height: 100vh; 
+    height: 100dvh; 
+    overflow: hidden; 
+    padding-bottom: env(safe-area-inset-bottom); 
+}
+
+/* ক্যাসিনো হেডার প্যানেল এরিয়া */
+.header { 
+    width: 100%; 
+    padding: 6px 16px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    background: #0e1322; 
+    border-bottom: 2px solid #00ffcc; 
+    box-sizing: border-box; 
+    z-index: 100; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.6); 
+    flex-shrink: 0; 
+}
+
+.brand .name { 
+    color: #00ffcc; 
+    font-weight: 900; 
+    font-size: 17px; 
+    letter-spacing: 1px; 
+}
+
+.brand .game { 
+    color: #f1c40f; 
+    font-weight: bold; 
+    font-size: 10px; 
+}
+
+.header-right { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+}
+
+/* 🔈 সাউন্ড বোতাম স্টাইল ভাই ভাই */
+.sound-btn { 
+    background: #1a2238; 
+    border: 1px solid #1a233d; 
+    color: #fff; 
+    font-size: 14px; 
+    width: 32px; 
+    height: 34px; 
+    border-radius: 50%; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    transition: 0.2s; 
+}
+
+.sound-btn.muted-active { 
+    background: #7f1d1d; 
+    border-color: #ea2027; 
+}
+
+/* 🚀 [ব্যালেন্স বক্স হাইডার]: অতিরিক্ত ব্যালেন্স বক্স ১ শতভাগ চিরতরে ডিসপ্লে নন লক ভাই ভাই! */
+.balance-box { 
+    display: none !important; 
+}
+
+/* 💎 মাল্টিপ্লায়ার বাফার ইন্ডিকেটর বার */
+.multiplier-bar {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 4px 0;
+    flex-shrink: 0;
+}
+
+.next-box {
+    background: rgba(0, 230, 255, 0.1);
+    border: 1px solid #00e6ff;
+    color: #00e6ff;
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(0, 230, 255, 0.2);
+}
+
+/* 💣 [৫×৫ ২৫টি স্লট ঘর মাইনস জোন ফিক্সড লক ভাই ভাই] */
+.mines-zone {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 380px;
+    height: 48%; 
+    margin: auto 0;
+    padding: 0 8px;
+}
+
+.mines-window-frame {
+    width: 100%;
+    height: 100%;
+    background: #0f1424;
+    border-radius: 16px;
+    padding: 10px;
+    border: 3px solid #1a233d; 
+    box-shadow: inset 0 0 20px #000;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    width: 100%;
+    height: 100%;
+    gap: 6px;
+}
+
+/* ২৫টি মাইনস ঘরের ওরিজিনাল প্রফেশনাল ভাইবস স্টাইল */
+.mines-cell {
+    background: #1e293b;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    transition: all 0.15s ease;
+}
+
+.mines-cell:active {
+    transform: scale(0.92);
+}
+
+/* 💎 ডায়মন্ড খোলার নিয়ন গ্লো এনিমেশন */
+.revealed-diamond {
+    background: radial-gradient(circle, #0284c7, #0f172a) !important;
+    border-color: #0ea5e9 !important;
+    box-shadow: 0 0 12px #0ea5e9, inset 0 0 6px #0ea5e9;
+    animation: cellPopIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 💥 বোমা ব্লাস্ট হওয়ার লাল খতরনাক এনিমেশন ভাই ভাই */
+.revealed-mine {
+    background: radial-gradient(circle, #b91c1c, #0f172a) !important;
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 15px #ef4444, inset 0 0 8px #ef4444;
+    animation: mineBlastShake 0.15s 2 ease-in-out;
+}
+
+/* রাউন্ড শেষে ব্যাকগ্রাউন্ডের বাকি বোমা-ডায়মন্ড উঁকি দেওয়ার স্টাইল */
+.revealed-diamond-hide { background: #0c4a6e !important; border-color: #0284c7 !important; opacity: 0.6; }
+.revealed-mine-hide { background: #7f1d1d !important; border-color: #b91c1c !important; opacity: 0.8; }
+
+@keyframes cellPopIn {
+    0% { transform: scale(0.7); }
+    100% { transform: scale(1); }
+}
+
+@keyframes mineBlastShake {
+    0% { transform: translateX(-3px); }
+    50% { transform: translateX(3px); }
+    100% { transform: translateX(0); }
+}
+
+/* 🏆 ইন-লাইন লাইভ স্কোরিং মেসেজ বার ভাই ভাই */
+.win-status-container { 
+    width: 92%; 
+    max-width: 360px; 
+    background: #0e1322; 
+    border: 1px solid #1a233d; 
+    padding: 8px; 
+    border-radius: 12px; 
+    text-align: center; 
+    font-weight: bold; 
+    font-size: 12px; 
+    color: #00e6ff; 
+    flex-shrink: 0; 
+    margin-bottom: 8px; 
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5); 
+}
+
+.win-glow-bar { 
+    background: #10ac84 !important; 
+    color: #fff !important; 
+    box-shadow: 0 0 15px #10ac84 !important; 
+    border-color: #fff; 
+}
+
+.lose-glow-bar { 
+    background: #962d2d !important; 
+    color: #fff !important; 
+    box-shadow: 0 0 15px #962d2d !important; 
+    border-color: #fff; 
+}
+
+/* 🎛 shrink কন্ট্রোল প্যানেল এরিয়া ভাই ভাই */
+.footer-controls { 
+    position: relative; 
+    bottom: 0; 
+    margin-bottom: 45px; 
+    width: 94%; 
+    max-width: 360px; 
+    background: #0e1322; 
+    padding: 10px 12px; 
+    border-radius: 20px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 8px; 
+    border: 1px solid #1a233d; 
+    box-shadow: 0 -5px 25px rgba(0,0,0,0.7); 
+    pointer-events: auto; 
+    flex-shrink: 0; 
+}
+
+.control-top-row {
+    display: flex;
+    width: 100%;
+    gap: 10px;
+}
+
+/* বাজি ও বোমার প্লাস-মাইনাস বক্স পাশাপাশি ১০০% ফিট */
+.bet-selector, .mines-selector { 
+    display: flex; 
+    align-items: center; 
+    background: #060913; 
+    padding: 4px 10px; 
+    border-radius: 14px; 
+    border: 2px solid #1a233d; 
+    flex: 1; 
+    justify-content: space-between; 
+}
+
+.bet-btn-nav { 
+    color: #00e6ff; 
+    border: none; 
+    background: none; 
+    font-size: 16px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    width: 25px; 
+    height: 25px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+}
+
+.control-bottom-row {
+    width: 100%;
+}
+
+/* ওরিজিনাল মেইন সবুজ BET বোতাম */
+.play-btn-main { 
+    background: linear-gradient(180deg, #10ac84, #1dd1a1); 
+    color: #000; 
+    width: 100%;
+    padding: 10px 0; 
+    border-radius: 14px; 
+    font-weight: 900; 
+    font-size: 15px; 
+    cursor: pointer; 
+    border: none; 
+    box-shadow: 0 3px 12px rgba(29,209,161,0.3); 
+    transition: all 0.1s ease; 
+    letter-spacing: 1px; 
+}
+
+/* 💰 ক্যাশআউট মুডে বোতাম লাল-কমলা নিয়ন থিম পুশ ভাই ভাই */
+.cashout-active-btn {
+    background: linear-gradient(180deg, #ff9f43, #ee5253) !important;
+    color: #fff !important;
+    box-shadow: 0 3px 15px rgba(238,82,83,0.4) !important;
+}
+
+.play-btn-main:active { 
+    transform: translateY(2px); 
+    box-shadow: none; 
+}
+
+.play-btn-main:disabled { 
+    background: #334155 !important; 
+    color: #64748b !important; 
+    box-shadow: none !important; 
+    cursor: not-allowed; 
+}
